@@ -166,11 +166,10 @@ impl Signature {
         let msg = Message::from_slice(&hash)?;
 
         // Get the compact form using bytes, and "v" parameter
-        let compact = RecoverableSignature::from_compact(&self.to_bytes()[..64], v)?;
-        // Acquire secp256k1 context from thread local storage
         let pkey = SECP256K1.with(move |object| -> Result<_, Error> {
             // Borrow once and reuse
             let secp256k1 = object.borrow();
+            let compact = RecoverableSignature::from_compact(&secp256k1, &self.to_bytes()[..64], v)?;
             // Recover public key
             let pkey = secp256k1.recover(&msg, &compact)?;
             // Serialize the recovered public key in uncompressed format
